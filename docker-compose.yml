@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+
+    environment:
+      POSTGRES_DB: llm_chat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+#внимание! БД на порту 5433. 
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
