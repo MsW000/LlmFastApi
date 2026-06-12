@@ -10,7 +10,7 @@ app = FastAPI()
 
 
 @app.post("/chat", response_model=ChatResponse)
-def chat_with_llm(
+async def chat_with_llm(
     request: ChatRequest,
     db: Session = Depends(get_db)
 ):
@@ -38,3 +38,22 @@ def chat_with_llm(
     return ChatResponse(
         answer=ai_answer
     )
+
+@app.get("/messages")
+async def messages_depends(
+    db: Session = Depends(get_db),
+    ):
+    messages = db.query(Message).all()
+    
+    return messages
+
+@app.get("/messages/{message_id}")
+async def get_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    ):
+    message = db.query(Message).filter(
+        Message.id == message_id
+        ).first()
+
+    return message
