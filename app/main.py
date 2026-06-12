@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from ollama import chat
 from sqlalchemy.orm import Session
 
@@ -57,3 +57,25 @@ async def get_message(
         ).first()
 
     return message
+
+@app.delete("/messages/{message_id}")
+async def delete_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    ):
+    message = db.query(Message).filter(
+        Message.id == message_id
+    ).first()
+
+    if message is None:
+        raise HTTPException(
+            status_code = 404,
+            detail="Message not found"
+        )
+    
+    db.delete(message)
+    db.commit()
+
+    return {
+        "message": "Deleted successfully"
+    }
