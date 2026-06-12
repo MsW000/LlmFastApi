@@ -79,3 +79,30 @@ async def delete_message(
     return {
         "message": "Deleted successfully"
     }
+
+@app.put("/messages/{message_id}")
+async def put_message(
+    message_id: int,
+    request: MessageUpdate,
+    db: Session = Depends(get_db),
+    ):
+    message = db.query(Message).filter(
+        Message.id == message_id
+    ).first()
+
+    if message is None:
+        raise HTTPException(
+            status_code = 404,
+            detail="Message not found"
+        )
+    
+    message.user_message = request.user_message
+
+    db.commit()
+    db.refresh(message)
+
+    return {
+        "id": message.id,
+        "user_message": message.user_message,
+        "ai_response": message.ai_response,
+    }
