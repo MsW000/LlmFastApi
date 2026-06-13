@@ -3,7 +3,14 @@ from ollama import chat
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from schemas import ChatRequest, ChatResponse
+from schemas import (
+    ChatRequest,
+    ChatResponse,
+    MessageResponse,
+    MessageUpdate,
+    MessageCount,
+)
+
 from models import Message
 from db import get_db
 
