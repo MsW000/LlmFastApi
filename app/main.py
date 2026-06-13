@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from ollama import chat
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from schemas import ChatRequest, ChatResponse
 from models import Message
@@ -44,6 +45,8 @@ async def get_messages(
     #пагинация
     limit: int = Query(default=10, ge=1, le=100),
     offset: int = 0,
+    #просто сорт и сессия
+    search: str | None = None,
     sort: str = "desc",
     db: Session = Depends(get_db),
     ):
@@ -54,6 +57,14 @@ async def get_messages(
         raise HTTPException(
             status_code = 400,
             detail="sort must be 'asc' or 'desc'"
+        )
+
+    if search:
+        query = query.filter(
+            or_(
+                Message.user_message.like(f"%{search}%"),
+                Message.ai_response.like(f"%{search}%")
+            )
         )
 
     if sort == "desc":
