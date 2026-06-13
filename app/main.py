@@ -125,3 +125,16 @@ async def put_message(
         "user_message": message.user_message,
         "ai_response": message.ai_response,
     }
+
+@app.get(""
+    "/messages/count", 
+    response_model=MessageCount
+)
+async def count_message(
+    db: Session = Depends(get_db)
+    ):
+    count = db.query(Message).count()
+
+    return {
+        "message_count": count
+    }
