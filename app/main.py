@@ -44,15 +44,27 @@ async def messages_depends(
     #пагинация
     limit: int = 10,
     offset: int = 0,
+    sort: str = "desc",
     db: Session = Depends(get_db),
     ):
 
-    return (
-        db.query(Message)
-        .limit(limit)
-        .offset(offset)
-        .all()
-    )
+    query = db.query(Message)
+
+    if sort == "desc":
+        query = query.order_by(Message.id.desc())
+
+    elif sort == "asc":
+        query = query.order_by(Message.id.asc())
+    
+    messages = query.limit(limit).offset(offset).all()
+
+    if sort not in ("asc", "desc"):
+        raise HTTPException(
+            status_code = 400,
+            detail="sort must be 'asc' or 'desc'"
+        )
+
+    return messages
 
 @app.get("/messages/{message_id}")
 async def get_message(
