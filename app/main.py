@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from ollama import chat
 from sqlalchemy.orm import Session
 
@@ -42,7 +42,7 @@ async def chat_with_llm(
 @app.get("/messages", response_model=list[MessageResponse])
 async def get_messages(
     #пагинация
-    limit: int = 10,
+    limit: int = Query(default=10, ge=1, le=100),
     offset: int = 0,
     sort: str = "desc",
     db: Session = Depends(get_db),
