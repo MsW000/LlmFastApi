@@ -41,11 +41,18 @@ async def chat_with_llm(
 
 @app.get("/messages")
 async def messages_depends(
+    #пагинация
+    limit: int = 10,
+    offset: int = 0,
     db: Session = Depends(get_db),
     ):
-    messages = db.query(Message).all()
-    
-    return messages
+
+    return (
+        db.query(Message)
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
 
 @app.get("/messages/{message_id}")
 async def get_message(
