@@ -39,8 +39,8 @@ async def chat_with_llm(
         answer=ai_answer
     )
 
-@app.get("/messages")
-async def messages_depends(
+@app.get("/messages", response_model=list[MessageResponse])
+async def get_messages(
     #пагинация
     limit: int = 10,
     offset: int = 0,
@@ -50,6 +50,12 @@ async def messages_depends(
 
     query = db.query(Message)
 
+    if sort not in ("asc", "desc"):
+        raise HTTPException(
+            status_code = 400,
+            detail="sort must be 'asc' or 'desc'"
+        )
+
     if sort == "desc":
         query = query.order_by(Message.id.desc())
 
@@ -58,15 +64,9 @@ async def messages_depends(
     
     messages = query.limit(limit).offset(offset).all()
 
-    if sort not in ("asc", "desc"):
-        raise HTTPException(
-            status_code = 400,
-            detail="sort must be 'asc' or 'desc'"
-        )
-
     return messages
 
-@app.get("/messages/{message_id}")
+@app.get("/messages/{message_id}", response_model=MessageResponse)
 async def get_message(
     message_id: int,
     db: Session = Depends(get_db),
@@ -75,6 +75,11 @@ async def get_message(
         Message.id == message_id
         ).first()
 
+    if message is None:
+        raise HTTPException(
+            status_code = 404,
+            detail="Message not found"
+        )
     return message
 
 @app.delete("/messages/{message_id}")
@@ -99,7 +104,7 @@ async def delete_message(
         "message": "Deleted successfully"
     }
 
-@app.put("/messages/{message_id}")
+@app.put("/messages/{message_id}", response_model=MessageResponse)
 async def put_message(
     message_id: int,
     request: MessageUpdate,
@@ -120,17 +125,13 @@ async def put_message(
     db.commit()
     db.refresh(message)
 
-    return {
-        "id": message.id,
-        "user_message": message.user_message,
-        "ai_response": message.ai_response,
-    }
+    return message
 
 @app.get(""
     "/messages/count", 
     response_model=MessageCount
 )
-async def count_message(
+async def count_messages(
     db: Session = Depends(get_db)
     ):
     count = db.query(Message).count()

@@ -12,3 +12,8 @@ class MessageUpdate(BaseModel):
 
 class MessageCount(BaseModel):
     message_count: int
+
+class MessageResponse(BaseModel):
+    id: int
+    user_message: str
+    ai_response: str
