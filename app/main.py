@@ -3,16 +3,18 @@ from ollama import chat
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from schemas import (
+from app.schemas import (
     ChatRequest,
     ChatResponse,
     MessageResponse,
     MessageUpdate,
     MessageCount,
+    UserCreate,
+    Token
 )
 
-from models import Message
-from db import get_db
+from app.models import Message
+from app.db import get_db
 
 app = FastAPI()
 
@@ -157,3 +159,40 @@ async def count_messages(
     return {
         "message_count": count
     }
+
+#авторизация и ручки log reg
+
+@app.post("/register")
+async def register_user(
+    user: UserCreate,
+    db: Session = Depends(get_db)
+):
+    existing_user = (
+        db.query(User)
+        .filter(User.email == user.email)
+        .first()
+    )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    new_user = User(
+        email=user.email,
+        password=user.password,  # временно
+        name=user.name
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User created"
+    }
+
+@app.get("/login")
+async def login_usr():
+    pass
