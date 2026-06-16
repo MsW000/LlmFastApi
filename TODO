@@ -1,0 +1,25 @@
+FastAPI
+│
+├── JWT
+├── Roles
+├── PostgreSQL
+├── SQLAlchemy
+├── Alembic
+├── Logging
+├── Settings
+│
+├── Ollama
+├── Embeddings
+├── pgvector
+│
+├── RAG
+│   ├── PDF Upload
+│   ├── Chunking
+│   ├── Vector Search
+│   └── Context Injection
+│
+└── Agent
+    ├── Search Documents
+    ├── Query Database
+    └── Call Tools
+

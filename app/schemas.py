@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-
+#чат 
 class ChatRequest(BaseModel):
     message: str
 
@@ -18,15 +18,24 @@ class MessageResponse(BaseModel):
     user_message: str
     ai_response: str
 
+#авторизация
 class UserCreate(BaseModel):
-    username: str
-    passwrod: str
+    email: str
+    password: str
+    name: str
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 class UserResponse(BaseModel):
     id: int
     email: str
     name: str
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

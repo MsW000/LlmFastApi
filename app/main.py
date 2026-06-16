@@ -2,6 +2,8 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from ollama import chat
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from passlib.context import CryptContext
+import hashlib
 
 from app.schemas import (
     ChatRequest,
@@ -9,12 +11,20 @@ from app.schemas import (
     MessageResponse,
     MessageUpdate,
     MessageCount,
+    Token,
+    UserResponse,
     UserCreate,
-    Token
+    UserLogin,
 )
 
-from app.models import Message
+from app.models import Message, User
 from app.db import get_db
+
+#Временное решение
+from app.database import Base, engine
+from app.models import User
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -162,11 +172,22 @@ async def count_messages(
 
 #авторизация и ручки log reg
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    
+def hash_password(password:str) -> str:
+    password = hashlib.sha256(password.encode()).hexdigest()
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    plain_password = hashlib.sha256(plain_password.encode()).hexdigest()
+    return pwd_context.verify(plain_password, hashed_password)
+
 @app.post("/register")
 async def register_user(
     user: UserCreate,
     db: Session = Depends(get_db)
 ):
+    
     existing_user = (
         db.query(User)
         .filter(User.email == user.email)
@@ -181,7 +202,7 @@ async def register_user(
 
     new_user = User(
         email=user.email,
-        password=user.password,  # временно
+        hashed_password=hash_password(user.password),
         name=user.name
     )
 
@@ -193,6 +214,27 @@ async def register_user(
         "message": "User created"
     }
 
-@app.get("/login")
-async def login_usr():
-    pass
+@app.post("/login")
+async def login_usr(
+    user: UserLogin,
+    db: Session = Depends(get_db)
+    ):
+
+    db_user = (
+        db.query(User)
+        .filter(User.email == user.email)
+        .first()
+    )
+
+    if db_user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+    if not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid credentials"
+        )
+    
+    return { "message": "Login successful" }
