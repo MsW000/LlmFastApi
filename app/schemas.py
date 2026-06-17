@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 #чат 
 class ChatRequest(BaseModel):
@@ -39,3 +40,13 @@ class UserResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+#jwt .env use pydantic (nice method. This's realy better then python-dotenv)
+class Settings(BaseSettings):
+    SECRET_KEY: str
+    DATABASE_URL: str
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()

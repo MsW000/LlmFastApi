@@ -4,6 +4,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from passlib.context import CryptContext
 import hashlib
+from jose import jwt 
+from datetime import datetime, timedelta
+import os
+from app.auth import create_access_token, oauth2_scheme
+from dotenv import load_dotenv
+#from app.config import SECRET_KEY
+from fastapi.security import OAuth2PasswordBearer
+
+load_dotenv()
 
 from app.schemas import (
     ChatRequest,
@@ -15,6 +24,7 @@ from app.schemas import (
     UserResponse,
     UserCreate,
     UserLogin,
+    Settings,
 )
 
 from app.models import Message, User
@@ -27,7 +37,6 @@ from app.models import User
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_llm(
@@ -231,10 +240,77 @@ async def login_usr(
             status_code=401,
             detail="Invalid credentials"
         )
-    if not verify_password(user.password, db_user.hashed_password):
+    if not verify_password(
+        user.password, 
+        db_user.hashed_password
+    ):
         raise HTTPException(
             status_code=401, 
             detail="Invalid credentials"
         )
     
-    return { "message": "Login successful" }
+    acess_token = create_access_token(
+        {
+            "sub": str(db_user.id) #Здесь id а не email(для бека проще. User может поменять email но не id ))
+        }
+    )
+
+    return { 
+        "message": acess_token, 
+        "token_type": "bearer"    
+    }
+#защищёнынй роут
+#JWT
+# 
+#проверка подписи
+# 
+#получение пользователя
+# 
+#доступ к роуту. Тренимся делать уц-уц-уц. Если чё мне сложно и я устал (((
+async def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)
+): 
+    try: 
+        payload = jwt.decoded(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        id = payload.get("sub")
+
+        if id is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Ivalid token"
+            )
+        
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Ivalid token"
+        )
+    user = (
+        db.query(User)
+        .filter(User.id == id)
+        .first()
+    )
+
+    if user in None:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+    
+    return user
+
+@app.get("/me")
+async def me(
+    current_user: User = Depends(get_current_user)
+):
+    return{
+        "id": current_user.id,
+        "email": current_user.email,
+        "name": current_user.name
+    }
