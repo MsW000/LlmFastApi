@@ -22,7 +22,7 @@ class JarvisUI(QWidget):
         # layout
         layout = QVBoxLayout()
 
-        # чат окно
+        # окно
         self.chat = QTextEdit()
         self.chat.setReadOnly(True)
 
@@ -47,7 +47,7 @@ class JarvisUI(QWidget):
         if not text:
             return
 
-        # показываем user сообщение
+        #  user сообщение
         self.chat.append(f"You: {text}")
 
         try:
