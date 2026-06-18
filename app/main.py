@@ -10,7 +10,7 @@ import os
 from app.auth import create_access_token, oauth2_scheme
 from dotenv import load_dotenv
 #from app.config import SECRET_KEY
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 load_dotenv()
 
@@ -225,13 +225,13 @@ async def register_user(
 
 @app.post("/login")
 async def login_usr(
-    user: UserLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
     ):
 
     db_user = (
         db.query(User)
-        .filter(User.email == user.email)
+        .filter(User.email == form_data.username)
         .first()
     )
 
@@ -241,7 +241,7 @@ async def login_usr(
             detail="Invalid credentials"
         )
     if not verify_password(
-        user.password, 
+        form_data.password, 
         db_user.hashed_password
     ):
         raise HTTPException(
@@ -251,13 +251,13 @@ async def login_usr(
     
     acess_token = create_access_token(
         {
-            "sub": str(db_user.id) #Здесь id а не email(для бека проще. User может поменять email но не id ))
+            "sub": str(db_user.id) #Здесь id а не email/User может поменять email но не id ))
         }
     )
 
-    return { 
-        "message": acess_token, 
-        "token_type": "bearer"    
+    return {
+        "access_token": acess_token,
+        "token_type": "bearer"
     }
 #защищёнынй роут
 #JWT
@@ -271,16 +271,17 @@ async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: Session = Depends(get_db)
 ): 
+    print("TOKEN RECEIVED:", token)
     try: 
-        payload = jwt.decoded(
+        payload = jwt.decode(
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
 
-        id = payload.get("sub")
+        user_id = payload.get("sub")
 
-        if id is None:
+        if user_id is None:
             raise HTTPException(
                 status_code=401,
                 detail="Ivalid token"
@@ -293,17 +294,17 @@ async def get_current_user(
         )
     user = (
         db.query(User)
-        .filter(User.id == id)
+        .filter(User.id == user_id)
         .first()
     )
 
-    if user in None:
+    if user is None:
         raise HTTPException(
             status_code=401,
             detail="User not found"
         )
     
-    return user
+    return user 
 
 @app.get("/me")
 async def me(
