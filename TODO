@@ -1,27 +1,83 @@
-FastAPI
+JARVIS CORE SYSTEM
 │
-├── JWT
-├── Roles
-├── PostgreSQL
-├── SQLAlchemy
-├── Alembic
-├── Logging
-├── Settings
+├── 1. API LAYER (FastAPI)
+│   ├── Auth (JWT)
+│   ├── Users / Roles
+│   ├── Chat API
+│   ├── Agent API
+│   ├── Tools API
+│   └── System Control API
 │
-├── Ollama
-├── Embeddings
-├── pgvector
+├── 2. AI CORE (LLM ENGINE)
+│   ├── Ollama Client
+│   ├── Prompt Manager
+│   ├── Conversation Memory
+│   ├── Context Builder
+│   └── Response Formatter
 │
-├── RAG
-│   ├── PDF Upload
-│   ├── Chunking
-│   ├── Vector Search
-│   └── Context Injection
+├── 3. AGENT SYSTEM (BRAIN)
+│   ├── Intent Parser
+│   ├── Planner (step generation)
+│   ├── Executor (tool runner)
+│   ├── Tool Router
+│   └── Safety Guard (important)
 │
-└── Agent
-    ├── Search Documents
-    ├── Query Database
-    └── Call Tools
+├── 4. TOOLS SYSTEM (ACTION LAYER)
+│   ├── System Tools
+│   │   ├── Open App
+│   │   ├── Run Command
+│   │   ├── File System Ops
+│   │   └── Window Control
+│   │
+│   ├── Knowledge Tools
+│   │   ├── Chat History Search
+│   │   ├── Notes / Memory DB
+│   │   └── Document Search (RAG)
+│   │
+│   ├── Data Tools
+│   │   ├── PostgreSQL Query Tool
+│   │   └── Analytics Tool
+│   │
+│   └── External Tools
+│       ├── Web Search
+│       ├── API Caller
+│       └── Future Extensions
+│
+├── 5. KNOWLEDGE SYSTEM (RAG - optional now, not core)
+│   ├── Document Ingestion
+│   ├── Chunking Engine
+│   ├── Embeddings (Ollama)
+│   ├── pgvector Storage
+│   └── Semantic Search
+│
+├── 6. MEMORY SYSTEM
+│   ├── Short-term Memory (chat context)
+│   ├── Long-term Memory (user facts)
+│   ├── Vector Memory (semantic recall)
+│   └── Session Storage
+│
+├── 7. SYSTEM INTEGRATION
+│   ├── OS Bridge Layer (Windows/Linux)
+│   ├── Process Manager
+│   ├── Hotkeys / Events
+│   └── Background Service
+│
+├── 8. QT6 CLIENT (Frontend)
+│   ├── Chat UI
+│   ├── Voice Input (STT)
+│   ├── Voice Output (TTS)
+│   ├── Animated Avatar (GIF/Live2D later)
+│   └── System Tray App
+│
+└── 9. OBSERVABILITY
+    ├── Logging
+    ├── Action History
+    ├── Error Tracking
+    └── Debug Panel
 
-Корпоративная база знаний, которая позволяет загружать PDF-документы и получать 
-ответы через RAG с агентом, имеющим доступ к документам и данным системы.
+Уже есть:
+
+FastAPI (мозг + API)
+LLM (Ollama)
+chat + CRUD
+auth

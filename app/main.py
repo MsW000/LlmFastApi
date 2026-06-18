@@ -259,19 +259,12 @@ async def login_usr(
         "access_token": acess_token,
         "token_type": "bearer"
     }
-#защищёнынй роут
-#JWT
-# 
-#проверка подписи
-# 
-#получение пользователя
-# 
-#доступ к роуту. Тренимся делать уц-уц-уц. Если чё мне сложно и я устал (((
+
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
         db: Session = Depends(get_db)
 ): 
-    print("TOKEN RECEIVED:", token)
+
     try: 
         payload = jwt.decode(
             token,
