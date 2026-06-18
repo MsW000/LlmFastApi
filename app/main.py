@@ -52,9 +52,12 @@ async def chat_with_llm(
             }
         ],
     )
-
-    ai_answer = response["message"]["content"]
-
+    
+    try:
+        ai_answer = response.message.content
+    except Exception:
+        ai_answer = response["message"]["content"]
+        
     message = Message(
         user_message=request.message,
         ai_response=ai_answer

@@ -59,7 +59,7 @@ class JarvisUI(QWidget):
 
             if response.status_code == 200:
                 data = response.json()
-                self.chat.append(f"Jarvis: {data.get('response', 'No response')}")
+                self.chat.append(f"Jarvis: {data.get('answer', 'No response')}")
             else:
                 self.chat.append(f"Error: {response.status_code}")
 
