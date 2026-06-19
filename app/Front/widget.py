@@ -5,12 +5,14 @@ from PySide6.QtWidgets import (
     QApplication,
     QWidget,
     QVBoxLayout,
-    QTextEdit,
     QLineEdit,
-    QPushButton
+    QPushButton,
+    QTextEdit,
+    QTabWidget,
 )
 
-API_URL = "http://127.0.0.1:8000/chat" 
+API_CHAT = "http://127.0.0.1:8000/chat"
+API_HISTORY = "http://127.0.0.1:8000/messages"
 
 
 class JarvisUI(QWidget):
@@ -19,60 +21,101 @@ class JarvisUI(QWidget):
 
         self.setWindowTitle("Jarvis UI")
 
-        # layout
-        layout = QVBoxLayout()
+        self.tabs = QTabWidget()
 
-        # окно
-        self.chat = QTextEdit()
-        self.chat.setReadOnly(True)
+        # chat tab
+        self.chat_tab = QWidget()
+        self.chat_layout = QVBoxLayout()
 
-        # ввод
+        self.chat_view = QTextEdit()
+        self.chat_view.setReadOnly(True)
+
         self.input = QLineEdit()
-        self.input.setPlaceholderText("Напиши сообщение...")
 
-        # кнопка
-        self.button = QPushButton("Send")
-        self.button.clicked.connect(self.send_message)
+        self.send_btn = QPushButton("Send")
+        self.send_btn.clicked.connect(self.send_message)
 
-        # добавляем в layout
-        layout.addWidget(self.chat)
-        layout.addWidget(self.input)
-        layout.addWidget(self.button)
+        self.chat_layout.addWidget(self.chat_view)
+        self.chat_layout.addWidget(self.input)
+        self.chat_layout.addWidget(self.send_btn)
 
-        self.setLayout(layout)
+        self.chat_tab.setLayout(self.chat_layout)
 
+        # History tab
+        self.history_tab = QWidget()
+        self.history_layout = QVBoxLayout()
+
+        self.history_view = QTextEdit()
+        self.history_view.setReadOnly(True)
+
+        self.refresh_btn = QPushButton("Load history")
+        self.refresh_btn.clicked.connect(self.load_history)
+
+        self.history_layout.addWidget(self.history_view)
+        self.history_layout.addWidget(self.refresh_btn)
+
+        self.history_tab.setLayout(self.history_layout)
+
+        # add tabs
+        self.tabs.addTab(self.chat_tab, "Chat")
+        self.tabs.addTab(self.history_tab, "History")
+
+        # main layout
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.tabs)
+        self.setLayout(main_layout)
+
+
+    # chat logic
     def send_message(self):
-        text = self.input.text().strip()
+        text = self.input.text()
 
         if not text:
             return
 
-        #  user сообщение
-        self.chat.append(f"You: {text}")
+        self.chat_view.append(f"You: {text}")
 
         try:
             response = requests.post(
-                API_URL,
+                API_CHAT,
                 json={"message": text},
                 timeout=30
             )
 
-            if response.status_code == 200:
-                data = response.json()
-                self.chat.append(f"Jarvis: {data.get('answer', 'No response')}")
-            else:
-                self.chat.append(f"Error: {response.status_code}")
+            data = response.json()
+
+            self.chat_view.append(
+                f"Jarvis: {data.get('answer', 'No response')}"
+            )
 
         except Exception as e:
-            self.chat.append(f"Connection error: {str(e)}")
+            self.chat_view.append(f"Error: {e}")
 
         self.input.clear()
+
+    # history logic
+    def load_history(self):
+        try:
+            response = requests.get(API_HISTORY, timeout=30)
+
+            if response.status_code == 200:
+                messages = response.json()
+
+                self.history_view.clear()
+
+                for msg in messages:
+                    self.history_view.append(f"You: {msg['user_message']}")
+                    self.history_view.append(f"Jarvis: {msg['ai_response']}")
+                    self.history_view.append("")
+            else:
+                self.history_view.append(f"Error: {response.status_code}")
+
+        except Exception as e:
+            self.history_view.append(f"Connection error: {e}")
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
     widget = JarvisUI()
     widget.show()
-
     sys.exit(app.exec())

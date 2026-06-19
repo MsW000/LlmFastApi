@@ -182,6 +182,18 @@ async def count_messages(
         "message_count": count
     }
 
+#история
+@app.get("/messages", response_model=list[MessageResponse])
+async def get_message(
+    db: Session = Depends(get_db)
+    ):
+    messages = (
+        db.query(Message)
+        .order_by(Message.id.desc())
+        .all()
+    )
+    return messages
+
 #авторизация и ручки log reg
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
