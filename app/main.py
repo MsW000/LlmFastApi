@@ -189,7 +189,7 @@ async def get_message(
     ):
     messages = (
         db.query(Message)
-        .order_by(Message.id.desc())
+        .order_by(Message.id.asc())
         .all()
     )
     return messages

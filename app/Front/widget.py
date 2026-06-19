@@ -1,5 +1,6 @@
 import sys
 import requests
+from PySide6.QtCore import QTimer
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -65,6 +66,11 @@ class JarvisUI(QWidget):
         main_layout.addWidget(self.tabs)
         self.setLayout(main_layout)
 
+        #refresh history
+        self.tabs.currentChanged.connect(self.on_tab_changed)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.load_history)
+        self.timer.start(10000) # update ever 10 sec.
 
     # chat logic
     def send_message(self):
@@ -107,12 +113,16 @@ class JarvisUI(QWidget):
                     self.history_view.append(f"You: {msg['user_message']}")
                     self.history_view.append(f"Jarvis: {msg['ai_response']}")
                     self.history_view.append("")
+
             else:
                 self.history_view.append(f"Error: {response.status_code}")
 
         except Exception as e:
             self.history_view.append(f"Connection error: {e}")
 
+    def on_tab_changed(self, index):
+        if index ==1:
+            self.load_history()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
