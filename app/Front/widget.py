@@ -1,6 +1,9 @@
 import sys
+import os
 import requests
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QMovie
+from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -10,6 +13,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTextEdit,
     QTabWidget,
+    QLabel,
 )
 
 API_CHAT = "http://127.0.0.1:8000/chat"
@@ -22,7 +26,80 @@ class JarvisUI(QWidget):
 
         self.setWindowTitle("Jarvis UI")
 
+        #background 
+
+        self.setStyleSheet("""
+        QWidget {
+            background: transparent;
+        }
+
+        QTabWidget {
+            background: transparent;
+        }
+
+        QTabWidget::pane {
+            background: transparent;
+            border: none;
+        }
+
+        QTabBar::tab {
+            background: rgba(0, 0, 0, 120);
+            color: white;
+            padding: 6px;
+            border-radius: 5px;
+        }
+
+        QTextEdit {
+            background-color: rgba(0, 0, 0, 160);
+            color: white;
+            border: none;
+        }
+
+        QLineEdit {
+            background-color: rgba(0, 0, 0, 160);
+            color: white;
+            border: none;
+        }
+
+        QPushButton {
+            background-color: rgba(0, 150, 255, 180);
+            color: white;
+            border-radius: 6px;
+        }
+
+        QPushButton:hover {
+            background-color: rgba(0, 180, 255, 220);
+        }
+        """)
+
+        self.bg = QLabel(self)
+        self.bg.setGeometry(self.rect())
+        self.bg.setScaledContents(True)
+
+        base_dir = os.path.dirname(__file__)
+        gif_path = os.path.join(
+            base_dir,
+            "image_front",
+            "Lego The Matrix.jpg"
+        )
+
+        self.movie = QMovie(gif_path)
+        self.bg.setMovie(self.movie)
+        self.movie.start()
+
+        self.bg.lower()
+
+        self.overlay = QLabel(self)
+        self.overlay.setGeometry(self.rect())
+        self.overlay.setStyleSheet("background-color: rgba(0,0,0,120);")
+
+        self.overlay.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.overlay.raise_()
+
         self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("background: transparent;")
+        self.tabs.setAttribute(Qt.WA_StyledBackground, True)
+        
 
         # chat tab
         self.chat_tab = QWidget()
@@ -33,6 +110,12 @@ class JarvisUI(QWidget):
 
         self.input = QLineEdit()
 
+        #cursor
+        self.cursor_label = QLabel(">", self)
+        self.cursor_label.setStyleSheet("color: cyan; font-weight: bold;")
+        self.cursor_label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.cursor_label.show()
+
         self.send_btn = QPushButton("Send")
         self.send_btn.clicked.connect(self.send_message)
 
@@ -41,6 +124,30 @@ class JarvisUI(QWidget):
         self.chat_layout.addWidget(self.send_btn)
 
         self.chat_tab.setLayout(self.chat_layout)
+
+        #скрываю стандартный курсор
+        self.input.setStyleSheet("""
+        QLineEdit {
+            color: white;
+            background-color: rgba(0, 0, 0, 160);
+            border: none;
+            selection-color: white;
+            selection-background-color: rgba(0,150,255,120);
+            caret-color: transparent;
+        }
+        """)
+
+        #blink_cursor
+        self.cursor_visible = True
+
+        self.cursor_timer = QTimer()
+        self.cursor_timer.timeout.connect(self.blink_cursor)
+        self.cursor_timer.start(500)
+        
+        #timer cursor
+        self.cursor_move_timer = QTimer()
+        self.cursor_move_timer.timeout.connect(self.move_cursor)
+        self.cursor_move_timer.start(60)
 
         # History tab
         self.history_tab = QWidget()
@@ -71,6 +178,7 @@ class JarvisUI(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.load_history)
         self.timer.start(10000) # update ever 10 sec.
+        QTimer.singleShot(100, self.focus_input)
 
     # chat logic
     def send_message(self):
@@ -123,6 +231,29 @@ class JarvisUI(QWidget):
     def on_tab_changed(self, index):
         if index ==1:
             self.load_history()
+
+    #resize window
+    def resizeEvent(self, event):
+        rect = self.rect()
+        self.bg.setGeometry(rect)
+        self.overlay.setGeometry(rect)
+        self.move_cursor()
+        return super().resizeEvent(event)
+    #CURSOR
+    #
+    #focus cursor
+    def focus_input(self):
+        self.tabs.setCurrentIndex(0)
+        self.input.setFocus()
+        self.move_cursor()
+    #position cursor
+    def move_cursor(self):
+        pos = self.input.mapTo(self, self.input.rect().topLeft())
+        self.cursor_label.move(pos.x() - 10, pos.y() - 1)
+    #blink cursor
+    def blink_cursor(self):
+        self.cursor_visible = not self.cursor_visible
+        self.cursor_label.setVisible(self.cursor_visible)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
