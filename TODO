@@ -95,3 +95,9 @@ FastAPI (мозг + API)
 LLM (Ollama)
 chat + CRUD
 auth
+front-end pyQT
+Rag(base){
+    Short-term (чат-контекст)
+    Long-term (факты о пользователе)
+    Vector Memory (семантический поиск)
+}
