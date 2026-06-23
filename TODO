@@ -1,4 +1,4 @@
-Установить **PostgreSQL 15+** + расширение **pgvector**
+**PostgreSQL 16+** + расширение **pgvector**
 Установить **Ollama** и скачать модель для эмбеддингов: `ollama pull nomic-embed-text`.
 Создать таблицу для эмбеддингов:
 
@@ -95,3 +95,9 @@ FastAPI (мозг + API)
 LLM (Ollama)
 chat + CRUD
 auth
+front-end pyQT
+Rag(base){
+    Short-term (чат-контекст)
+    Long-term (факты о пользователе)
+    Vector Memory (семантический поиск)
+}
