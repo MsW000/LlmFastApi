@@ -2,7 +2,7 @@ import sys
 import os
 import requests
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QMovie
+from PySide6.QtGui import QMovie, QPixmap
 from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
@@ -79,13 +79,16 @@ class JarvisUI(QWidget):
         base_dir = os.path.dirname(__file__)
         gif_path = os.path.join(
             base_dir,
-            "image_front",
+            "..",
+            "avatar",
             "Lego The Matrix.jpg"
         )
 
-        self.movie = QMovie(gif_path)
-        self.bg.setMovie(self.movie)
-        self.movie.start()
+        if not os.path.exists(gif_path):
+                print(f"[ERROR] File not found: {gif_path}")
+
+        pixmap = QPixmap(gif_path)
+        self.bg.setPixmap(pixmap)
 
         self.bg.lower()
 
@@ -133,7 +136,6 @@ class JarvisUI(QWidget):
             border: none;
             selection-color: white;
             selection-background-color: rgba(0,150,255,120);
-            caret-color: transparent;
         }
         """)
 

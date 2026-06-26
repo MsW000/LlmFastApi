@@ -7,7 +7,7 @@ import hashlib
 from jose import jwt 
 from datetime import datetime, timedelta
 import os
-from app.auth import create_access_token, oauth2_scheme
+from app.api_layer.auth.auth import create_access_token, oauth2_scheme
 from dotenv import load_dotenv
 
 #from app.config import SECRET_KEY
@@ -15,12 +15,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 load_dotenv()
 
-from app.schemas import (
-    ChatRequest,
-    ChatResponse,
-    MessageResponse,
-    MessageUpdate,
-    MessageCount,
+
+#chat schemas
+from app.api_layer.auth.schemas import(
     Token,
     UserResponse,
     UserCreate,
@@ -28,12 +25,21 @@ from app.schemas import (
     Settings,
 )
 
-from app.models import Message, User
+#auth schemas
+from app.api_layer.chat.schemas import (
+    ChatRequest,
+    ChatResponse,
+    MessageResponse,
+    MessageUpdate,
+    MessageCount,
+)
+
+from app.memory_system.long_term.models import User
+from app.memory_system.short_term.models import Message
 from app.db import get_db
 
 #Временное решение
 from app.database import Base, engine
-from app.models import User
 
 Base.metadata.create_all(bind=engine)
 
