@@ -13,81 +13,79 @@
 [ 0 ] Автозапуск
 
 JARVIS CORE SYSTEM
+
+app/
+├── api_layer/
+│   ├── auth/
+│   ├── users/
+│   ├── chat/
+│   ├── agent/
+│   ├── tools/
+│   └── system_control/
 │
-├── 1. API LAYER (FastAPI)
-│   ├── Auth (JWT)
-│   ├── Users / Roles
-│   ├── Chat API
-│   ├── Agent API
-│   ├── Tools API
-│   └── System Control API
+├── ai_core/
+│   ├── ollama_client/
+│   ├── prompt_manager/
+│   ├── conversation_memory/
+│   ├── context_builder/
+│   └── response_formatter/
 │
-├── 2. AI CORE (LLM ENGINE)
-│   ├── Ollama Client
-│   ├── Prompt Manager
-│   ├── Conversation Memory
-│   ├── Context Builder
-│   └── Response Formatter
+├── agent_system/
+│   ├── intent_parser/
+│   ├── planner/
+│   ├── executor/
+│   ├── tool_router/
+│   └── safety_guard/
 │
-├── 3. AGENT SYSTEM (BRAIN)
-│   ├── Intent Parser
-│   ├── Planner (step generation)
-│   ├── Executor (tool runner)
-│   ├── Tool Router
-│   └── Safety Guard (important)
+├── tools_system/
+│   ├── system_tools/
+│   │   ├── open_app/
+│   │   ├── run_command/
+│   │   ├── file_ops/
+│   │   └── window_control/
+│   ├── knowledge_tools/
+│   │   ├── history_search/
+│   │   ├── notes_memory/
+│   │   └── document_search/
+│   ├── data_tools/
+│   │   ├── pg_query/
+│   │   └── analytics/
+│   └── external_tools/
+│       ├── web_search/
+│       ├── api_caller/
+│       └── future_extensions/
 │
-├── 4. TOOLS SYSTEM (ACTION LAYER)
-│   ├── System Tools
-│   │   ├── Open App
-│   │   ├── Run Command
-│   │   ├── File System Ops
-│   │   └── Window Control
-│   │
-│   ├── Knowledge Tools
-│   │   ├── Chat History Search
-│   │   ├── Notes / Memory DB
-│   │   └── Document Search (RAG)
-│   │
-│   ├── Data Tools
-│   │   ├── PostgreSQL Query Tool
-│   │   └── Analytics Tool
-│   │
-│   └── External Tools
-│       ├── Web Search
-│       ├── API Caller
-│       └── Future Extensions
+├── knowledge_system/
+│   ├── ingestion/
+│   ├── chunking/
+│   ├── embeddings/
+│   ├── vector_store/
+│   └── semantic_search/
 │
-├── 5. KNOWLEDGE SYSTEM (RAG - optional now, not core)
-│   ├── Document Ingestion
-│   ├── Chunking Engine
-│   ├── Embeddings (Ollama)
-│   ├── pgvector Storage
-│   └── Semantic Search
+├── memory_system/
+│   ├── short_term/
+│   ├── long_term/
+│   ├── vector_memory/
+│   └── session_storage/
 │
-├── 6. MEMORY SYSTEM
-│   ├── Short-term Memory (chat context)
-│   ├── Long-term Memory (user facts)
-│   ├── Vector Memory (semantic recall)
-│   └── Session Storage
+├── system_integration/
+│   ├── os_bridge/
+│   ├── process_manager/
+│   ├── hotkeys/
+│   └── background_service/
 │
-├── 7. SYSTEM INTEGRATION
-│   ├── OS Bridge Layer (Windows/Linux)
-│   ├── Process Manager
-│   ├── Hotkeys / Events
-│   └── Background Service
+├── qt6_client/
+│   ├── chat_ui/
+│   ├── voice_input/
+│   ├── voice_output/
+│   ├── avatar/
+│   └── system_tray/
 │
-├── 8. QT6 CLIENT (Frontend)
-│   ├── Chat UI
-│   ├── Voice Input (STT)
-│   ├── Voice Output (TTS)
-│   ├── Animated Avatar (GIF/Live2D later)
-│   └── System Tray App
-│
-└── 9. OBSERVABILITY
-    ├── Logging
-    ├── Action History
-    ├── Error Tracking
-    └── Debug Panel
+└── observability/
+    ├── logging/
+    ├── action_history/
+    ├── error_tracking/
+    └── debug_panel/
 
 Уже есть:
 
