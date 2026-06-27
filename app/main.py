@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from ollama import chat
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import or_
 from passlib.context import CryptContext
 import hashlib
@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 load_dotenv()
-
 
 #chat schemas
 from app.api_layer.auth.schemas import(
@@ -48,7 +47,7 @@ app = FastAPI()
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_llm(
     request: ChatRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     response = chat(
         model="llama3.2",
@@ -86,7 +85,7 @@ async def get_messages(
     #просто сорт и сессия
     search: str | None = None,
     sort: str = "desc",
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     ):
 
     query = db.query(Message)
@@ -118,7 +117,7 @@ async def get_messages(
 @app.get("/messages/{message_id}", response_model=MessageResponse)
 async def get_message(
     message_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     ):
     message = db.query(Message).filter(
         Message.id == message_id
@@ -134,7 +133,7 @@ async def get_message(
 @app.delete("/messages/{message_id}")
 async def delete_message(
     message_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     ):
     message = db.query(Message).filter(
         Message.id == message_id
@@ -157,7 +156,7 @@ async def delete_message(
 async def put_message(
     message_id: int,
     request: MessageUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     ):
     message = db.query(Message).filter(
         Message.id == message_id
@@ -181,7 +180,7 @@ async def put_message(
     response_model=MessageCount
 )
 async def count_messages(
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ):
     count = db.query(Message).count()
 
@@ -192,7 +191,7 @@ async def count_messages(
 #история
 @app.get("/messages", response_model=list[MessageResponse])
 async def get_message(
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ):
     messages = (
         db.query(Message)
@@ -216,7 +215,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 @app.post("/register")
 async def register_user(
     user: UserCreate,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     
     existing_user = (
@@ -248,7 +247,7 @@ async def register_user(
 @app.post("/login")
 async def login_usr(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
     ):
 
     db_user = (
@@ -284,7 +283,7 @@ async def login_usr(
 
 async def get_current_user(
         token: str = Depends(oauth2_scheme),
-        db: Session = Depends(get_db)
+        db: AsyncSession = Depends(get_db)
 ): 
 
     try: 
