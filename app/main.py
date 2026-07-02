@@ -1,15 +1,16 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
-from ollama import chat
+from ollama import chat, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import or_
+from sqlalchemy import or_, select, func
 from passlib.context import CryptContext
 import hashlib
-from jose import jwt 
+from jose import jwt, JWTError
 from datetime import datetime, timedelta
 import os
 from app.api_layer.auth.auth import create_access_token, oauth2_scheme
 from dotenv import load_dotenv
-
+from contextlib import asynccontextmanager
+from  app.db import init_db
 #from app.config import SECRET_KEY
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -37,19 +38,22 @@ from app.memory_system.long_term.models import User
 from app.memory_system.short_term.models import Message
 from app.db import get_db
 
-#Временное решение
 from app.database import Base, engine
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # table create in create_tables
+    yield
+    await engine.dispose()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_llm(
     request: ChatRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    response = chat(
+    response = await AsyncClient().chat(
         model="llama3.2",
         messages=[
             {
@@ -70,8 +74,8 @@ async def chat_with_llm(
     )
 
     db.add(message)
-    db.commit()
-    db.refresh(message)
+    await db.commit()
+    await db.refresh(message)
 
     return ChatResponse(
         answer=ai_answer
@@ -88,16 +92,16 @@ async def get_messages(
     db: AsyncSession = Depends(get_db),
     ):
 
-    query = db.query(Message)
-
     if sort not in ("asc", "desc"):
         raise HTTPException(
             status_code = 400,
             detail="sort must be 'asc' or 'desc'"
         )
 
+    query = (select(Message))
+
     if search:
-        query = query.filter(
+        query = query.where(
             or_(
                 Message.user_message.like(f"%{search}%"),
                 Message.ai_response.like(f"%{search}%")
@@ -107,10 +111,11 @@ async def get_messages(
     if sort == "desc":
         query = query.order_by(Message.id.desc())
 
-    elif sort == "asc":
+    else:
         query = query.order_by(Message.id.asc())
     
-    messages = query.limit(limit).offset(offset).all()
+    result = await db.execute(query.limit(limit).offset(offset))
+    messages = result.scalars().all()
 
     return messages
 
@@ -119,9 +124,10 @@ async def get_message(
     message_id: int,
     db: AsyncSession = Depends(get_db),
     ):
-    message = db.query(Message).filter(
-        Message.id == message_id
-        ).first()
+    result = await db.execute(
+        select(Message).where(Message.id == message_id)
+    )
+    message = result.scalar_one_or_none()
 
     if message is None:
         raise HTTPException(
@@ -135,9 +141,10 @@ async def delete_message(
     message_id: int,
     db: AsyncSession = Depends(get_db),
     ):
-    message = db.query(Message).filter(
-        Message.id == message_id
-    ).first()
+    result = await db.execute(
+        select(Message).where(Message.id == message_id)
+    )
+    message = result.scalar_one_or_none()
 
     if message is None:
         raise HTTPException(
@@ -145,8 +152,8 @@ async def delete_message(
             detail="Message not found"
         )
     
-    db.delete(message)
-    db.commit()
+    await db.delete(message)
+    await db.commit()
 
     return {
         "message": "Deleted successfully"
@@ -158,9 +165,10 @@ async def put_message(
     request: MessageUpdate,
     db: AsyncSession = Depends(get_db),
     ):
-    message = db.query(Message).filter(
-        Message.id == message_id
-    ).first()
+    result = await db.execute(
+        select(Message).where(Message.id == message_id)
+    )
+    message = result.scalar_one_or_none()
 
     if message is None:
         raise HTTPException(
@@ -170,23 +178,22 @@ async def put_message(
     
     message.user_message = request.user_message
 
-    db.commit()
-    db.refresh(message)
+    await db.commit()
+    await db.refresh(message)
 
     return message
 
-@app.get(""
-    "/messages/count", 
-    response_model=MessageCount
-)
-async def count_messages(
-    db: AsyncSession = Depends(get_db)
-    ):
-    count = db.query(Message).count()
+# @app.get("/messages/count", response_model=MessageCount
+# )
+# async def count_messages(
+#     db: AsyncSession = Depends(get_db)
+#     ):
+#     result = await db.execute(select(func.count()).select_from(Message))
+#     count = result.scalar()
 
-    return {
-        "message_count": count
-    }
+#     return {
+#         "message_count": count
+#     }
 
 #история
 @app.get("/messages", response_model=list[MessageResponse])
@@ -194,8 +201,9 @@ async def get_message(
     db: AsyncSession = Depends(get_db)
     ):
     messages = (
-        db.query(Message)
-        .order_by(Message.id.asc())
+        await db.execute(select(Message))
+        .select(order_by(Message.id.asc()))
+        .scalars()
         .all()
     )
     return messages
@@ -218,11 +226,10 @@ async def register_user(
     db: AsyncSession = Depends(get_db)
 ):
     
-    existing_user = (
-        db.query(User)
-        .filter(User.email == user.email)
-        .first()
+    result = await db.execute(
+        select(User).where(User.email == user.email)
     )
+    existing_user = result.scalar_one_or_none()
 
     if existing_user:
         raise HTTPException(
@@ -237,8 +244,8 @@ async def register_user(
     )
 
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
 
     return {
         "message": "User created"
@@ -249,12 +256,10 @@ async def login_usr(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
     ):
-
-    db_user = (
-        db.query(User)
-        .filter(User.email == form_data.username)
-        .first()
+    result = await db.execute(
+        select(User).where(User.email == form_data.username)
     )
+    db_user = result.scalar_one_or_none()
 
     if db_user is None:
         raise HTTPException(
@@ -306,11 +311,11 @@ async def get_current_user(
             status_code=401,
             detail="Ivalid token"
         )
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
+    
+    result = await db.execute (
+        select(User).where(User.id == user_id)
     )
+    user = result.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(

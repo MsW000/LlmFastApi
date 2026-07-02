@@ -12,5 +12,4 @@ class Message(Base):
     ai_response = Column(Text, nullable=False)
     embedding = Column(Vector(768))
 
-    # обратная связь
     owner = relationship("User", back_populates="messages")
