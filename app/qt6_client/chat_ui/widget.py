@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
+#from avatar.jarvis_Thinking import JarvisThinkingIndicator
+
 API_CHAT = "http://127.0.0.1:8000/chat"
 API_HISTORY = "http://127.0.0.1:8000/messages"
 

@@ -11,8 +11,11 @@ from app.api_layer.auth.auth import create_access_token, oauth2_scheme
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from  app.db import init_db
+from sqlalchemy import text
 #from app.config import SECRET_KEY
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from app.knowledge_system.chunking.ingestion import Documentation
+from app.database import Base, AsyncSessionLocal, engine
 
 load_dotenv()
 
@@ -37,8 +40,6 @@ from app.api_layer.chat.schemas import (
 from app.memory_system.long_term.models import User
 from app.memory_system.short_term.models import Message
 from app.db import get_db
-
-from app.database import Base, engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -334,3 +335,11 @@ async def me(
         "email": current_user.email,
         "name": current_user.name
     }
+
+#в app/knowledge_system/chunking есть ingestion.py
+# Там лежит search. И там подключение к БД лежит (:
+@app.post("/search")
+async def semantic_search(query: str, limit: int = 3):
+    doc_system = Documentation()
+    results = await doc_system.search(query, limit) # <-- Ну так чисто обрати внимание, если чё будешь переписывать
+    return {"results": results}
